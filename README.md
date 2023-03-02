@@ -6,12 +6,12 @@
   - [Run Sample bot](#run-sample-bot)
   - [Create your own bot](#create-your-own-bot)
 - [Components](#components)
-  - [Introduction](#components-introduction)
   - [Bot](#bot)
   - [Stage](#stage)
   - [Node](#node)
   - [Routing System](#routing-system)
   - [Telegram Bot API](#telegram-bot-api)
+  - [Webhook](#webhook)
   - [Helpers](#helpers)
   - [Config](#config)
   - [Database](#database)
@@ -141,7 +141,7 @@ class StartStage extends Stage
         msg("Your name is $this->name");
         closeNode();
     }
-    private function isSepehr() #this method is not Node
+    private function isSepehr() #this method is not Node (because it is private)
     {
         return $this->name == 'Sepehr';
     }
@@ -150,3 +150,170 @@ class StartStage extends Stage
 > **Note**
 > Only public methods can be routed. and public properties automatically reassigned to the stage. if you don't want to automatically reassign a property private it. and if your method is not Node private it. for improving your database performance.
 
+<a name="components"></a>
+## Components
+Bip has some components that you can use them in your bot. for example, you can use [Logger](#logger) to log your bot actions, or use [Webhook](#webhook) to get webhook data with Autocomplete IDE.
+
+<a name="stage"></a>
+### Stage
+Stage is a class that contains [nodes](#node), [controller](#controller), [default](#default) method and [properties](#properties). that we will explain it in the following sections.
+You can consider a stage is specific part of your bot. suppose you have a bot that has a specific part for shopping and another part for chatting you can create `ShopStage` and `ChatStage` class and use them in your bot.
+Stage classes should be in `Stages/` directory of your bot.
+for example in NotePad bot you can find `StartStage` classes in `Stages/` directory.
+
+### Creating Stages :
+in `Stages/` (or anything else) directory of your project create a php class file for your stage (file name should be `PascalCase` and The file name **must** be the same as the class name)
+for example we create `MenuStage.php` file in `Stages/` directory and add this code to it :
+
+
+```php
+<?php
+namespace Bot\<STAGE_DIRECTORY>; #read following note for more information
+
+use Bip\App\Stage;
+
+class MenuStage extends Stage
+{
+    public function controller()
+    {
+        route('menu')->onMessageText('/menu');
+    }
+    public function menu()
+    {
+        msg('This is menu');
+        closeNode();
+    }
+    
+}
+```
+and extends your stage from `Bip\App\Stage` class.
+
+> **Note**
+> for psr-4 autoload your stages you must add namespace for your stage classes. stage namespaces start with `namespace Bot\<STAGE_DIRECTORY>;` that `<STAGE_DIRECTORY>` is the path of stage directory. for example in NotePad bot `bots/NotePad/Stages/StartStage.php` stage has `namespace Bots\NotePad\Stages;`.
+
+> **Note**
+> `Bots` namespace point to `bots` directory in Bip root directory. you can change it in `composer.json` file.
+
+<a name="node"></a>
+### Node :
+Nodes are **public** methods that are called when a specific event occurs. for example when a user sends a message to your bot, a node is called. a node is state of user for example we want to get two number from user and multiply them. we can create a node for getting first number and another node for getting second number and multiply them in a third node. for example :
+
+```php
+...
+class CalculatorStage extends Stage
+{
+    #public properties are automatically reassigned to the stage
+    public int $firstNumber = 0; 
+    public int $secondNumber = 0;
+    
+    public function controller()
+    {
+        route('getFirstNumber')->onMessageText('/start');
+    }
+    #public methods are nodes
+    public function getFirstNumber() 
+    {
+        msg('Enter first number');
+        bindNode('saveFirstNumber');
+    }
+    public function saveFirstNumber()
+    {
+        $this->firstNumber = Webhook::getObject()->message->text;
+        msg('Enter second number');
+        bindNode('saveSecondNumber');
+    }
+    public function saveSecondNumber()
+    {
+        $this->secondNumber = Webhook::getObject()->message->text;
+        msg("Result is : ".$this->firstNumber * $this->secondNumber);
+        closeNode();
+    }
+}
+```
+> **Note**
+> Only public methods can be routed. and public properties automatically reassigned to the stage. if you don't want to automatically reassign a property private it. and if your method is not Node private it. for improving your database performance.
+
+<a name="controller"></a>
+<a name="routing-system"></a>
+### Controller and Routing System :
+controller is **public** method that is called first of any node in each run.
+you can use `route` method to route a node to a method. for example :
+
+```php
+...
+public function controller()
+{
+    route('start')->onMessageText('/start');
+    route('welcome')->onMessageText('/menu');
+    route('profile')->onMessageText('Profile');
+}
+...
+``` 
+
+<a name="properties"></a>
+#### Properties :
+public properties in stage classes are automatically reassigned to the stage. it means that they are saved in database and in new requests they are reassigned to the stage. for example :
+
+```php
+...
+class CounterStage extends Stage
+{
+    public int $counter = 0;
+    public function controller()
+    {
+        route('increment')->onMessageText('/increment');
+    }
+    public function increment()
+    {
+        $this->counter++;
+        msg("Counter is : $this->counter");
+        closeNode();
+    }
+}
+...
+```
+`CounterStage` is a stage that has a counter property. when a user sends `/increment` command to bot, the counter property is incremented and reassigned to the stage. so when the user sends `/increment` command again the counter property is incremented again and reassigned to the stage. and so on.
+> **Note**
+> non-public properties are not reassigned to the stage.
+
+> **Note**
+> highly recommended to use data type for properties. STM (Stage-Table Mapper) use data types for adding columns to the table. for example if you have a property that is `int` type, STM will add a column to the table with `int` data type. if you don't use data type for properties, STM will add a column to the table with `text` data type.
+
+<a name="default"></a>
+#### Default :
+default method is a method that is called when no node is routed. for example :
+
+```php
+...
+class CalculatorStage extends Stage
+{
+    public function controller()
+    {
+        route('getFirstNumber')->onMessageText('/start');
+    }
+    public function getFirstNumber() 
+    {
+        msg('Enter first number');
+        bindNode('saveFirstNumber');
+    }
+    public function saveFirstNumber()
+    {
+        $this->firstNumber = Webhook::getObject()->message->text;
+        msg('Enter second number');
+        bindNode('saveSecondNumber');
+    }
+    public function saveSecondNumber()
+    {
+        $this->secondNumber = Webhook::getObject()->message->text;
+        msg("Result is : ".$this->firstNumber * $this->secondNumber);
+        closeNode();
+    }
+    public function default()
+    {
+        msg('Invalid command');
+    }
+}
+```
+when a user sends a message that is not routed to any node, the default method is called. for example if a user sends `/start` command to bot, the `getFirstNumber` node is called. but if a user sends a message that is not routed to any node, the `default` method is called.
+> **Note**
+> Bip Garbage Collector will delete `$this->firstNumber` and `$this->secondNumber` properties after the `saveSecondNumber` stage run ends and will not reassign them to the stage in next run.
