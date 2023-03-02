@@ -38,7 +38,7 @@ composer require biplib/bip
 
 <a name="run-sample-bot"></a>
 ### Run Sample bot
-in `bots/NotePad` there is a sample NotePad bot that you can run it and see how it works.
+in `bots/NotePad` there is a sample [NotePad](https://github.com/BipLib/bip/tree/main/bots/NotePad) bot that you can run it and see how it works.
 For running this bot you need to edit `bots/NotePad/config.php` and set your bot token that you get from [BotFather](https://t.me/BotFather).
 
 Then copy url of `bots/NotePad/index.php` and set it as webhook url by calling this url in your browser (replace `<YOUR_BOT_TOKEN>` with your bot token and `<YOUR_SERVER_URL>` with your server url) :
