@@ -326,8 +326,8 @@ class CalculatorStage extends Stage
 }
 ```
 When a user sends a message that is not routed to any node, the default method is called. For example, if a user sends `/start` command to the bot, the `getFirstNumber` node is called. But if a user sends a message that is not routed to any node, the `default` method is called.
-> **Note**
-> Bip Garbage Collector will delete `$this->firstNumber` and `$this->secondNumber` properties after the `saveSecondNumber` stage run ends and will not reassign them to the stage in next run.
+
+
 
 
 <a name="telegram-bot-api"></a>
