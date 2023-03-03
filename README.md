@@ -336,7 +336,7 @@ Bip has a Telegram Bot API wrapper for IDE Autocomplete. You can find it in `Bip
 
 ![call](https://user-images.githubusercontent.com/87861266/222744851-82f83be3-2640-4ede-9074-81fe9492ed04.png)
 
-in the PHP version 8 and above you can use you can pass named arguments to the method. For example :
+in the PHP version 8 and above you can pass named arguments to the method. For example :
 ```php
 ...
 public function test(){
